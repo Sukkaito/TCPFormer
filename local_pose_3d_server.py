@@ -147,8 +147,13 @@ def calculate_angle_3d(a, b, c) -> float:
 
 def mp_to_h36m(lms, w, h):
     def norm_pt(landmark):
-        x = landmark.x * 2 - 1
-        y = (landmark.y * h) / w * 2 - h / w
+        # landmark.x, landmark.y in [0, 1] relative to w, h
+        px = landmark.x * w
+        py = landmark.y * h
+        # Chuẩn hóa theo max(w, h) để giữ nguyên tỉ lệ vật lý và nằm trong khoảng [-1, 1]
+        dim = max(w, h)
+        x = (px - w / 2) / (dim / 2)
+        y = (py - h / 2) / (dim / 2)
         conf = landmark.visibility if hasattr(landmark, 'visibility') else 1.0
         return [x, y, conf]
 
@@ -202,8 +207,10 @@ def extract_pose_data_3d(video_url: str) -> Dict[str, Any]:
 
         fps = cap.get(cv2.CAP_PROP_FPS) or 30.0
         sample_rate = 1  # Lấy full frame (không skip)
-        width = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
-        height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
+        
+        # Sẽ lấy w, h từ frame thực tế để tránh lỗi rotation của điện thoại
+        width = None
+        height = None
 
         frame_index = 0
         valid_frames_meta = []
@@ -220,6 +227,10 @@ def extract_pose_data_3d(video_url: str) -> Dict[str, Any]:
                 ok, frame = cap.read()
                 if not ok:
                     break
+
+                # Lấy width, height chuẩn từ frame đã được OpenCV tự động rotate (nếu có metadata)
+                if width is None or height is None:
+                    height, width = frame.shape[:2]
 
                 if frame_index % sample_rate != 0:
                     frame_index += 1
