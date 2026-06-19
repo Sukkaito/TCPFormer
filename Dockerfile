@@ -14,7 +14,7 @@ WORKDIR /app
 
 # Environment
 ENV PYTHONUNBUFFERED=1
-ENV VLM_API_URL="http://localhost:8000"
+ENV VLM_API_URL="http://localhost:8001/analyze-pair"
 
 # Install runtime system dependencies (kept together for single layer)
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -37,13 +37,19 @@ COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy small application files (keep large model weights last to avoid cache invalidation)
-COPY start.sh local_pose_3d_server.py tcpformer_model.py ./
+COPY start.sh vlm.py local_pose_3d_server.py tcpformer_model.py ./
 
 # Prepare runtime directories and permissions
 RUN mkdir -p /app/videos && chmod +x /app/start.sh
 
 # Copy large model weight last (minimize rebuilds of earlier layers)
 COPY --from=builder /app/data/* ./
+
+# Install Ollama and bake model into image (this step is large; keep at end)
+RUN curl -fsSL https://ollama.com/install.sh | sh
+RUN ollama serve & \
+    sleep 5 && \
+    ollama pull qwen2.5vl:7b
 
 # Expose ports (optional, services communicate via localhost inside container)
 EXPOSE 8000
