@@ -1,0 +1,29 @@
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+.env
+
+# Large files & Models
+*.pkl
+*.pth
+*.pth.tr
+*.pt
+*.h5
+
+# Videos / Data
+*.mp4
+*.mov
+*.avi
+videos/
+
+# IDE
+.DS_Store
+.vscode/
+.idea/

@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  pose_3d_server:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    image: local_pose_3d_server:latest
+    container_name: local_pose_3d_server
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+      # Cấu hình API VLM nếu cần
+      - VLM_API_URL=https://stung-ceremony-charity.ngrok-free.dev/analyze-pair
+      - MAX_WORKERS=4
+    restart: unless-stopped
+    # Nếu muốn dùng GPU (NVIDIA), uncomment đoạn dưới đây:
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
